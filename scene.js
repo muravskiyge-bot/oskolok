@@ -299,7 +299,8 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
 
   function resize(isMobile) {
     mobile = isMobile;
-    const w = window.innerWidth, h = window.innerHeight;
+    // размер самого холста, без полосы прокрутки, иначе картинка сплющивается
+    const w = canvas.clientWidth, h = canvas.clientHeight;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -353,9 +354,9 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
     tmp.copy(hero.position).project(camera);
     const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
     return {
-      x: (tmp.x * 0.5 + 0.5) * window.innerWidth,
-      y: (-tmp.y * 0.5 + 0.5) * window.innerHeight,
-      r: (hero.scale.x / halfH) * (window.innerHeight / 2),
+      x: (tmp.x * 0.5 + 0.5) * canvas.clientWidth,
+      y: (-tmp.y * 0.5 + 0.5) * canvas.clientHeight,
+      r: (hero.scale.x / halfH) * (canvas.clientHeight / 2),
     };
   }
 
