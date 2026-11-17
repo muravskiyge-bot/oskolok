@@ -58,7 +58,8 @@ const FRAMES = [
     color: '#ffffff', rough: 0.16, metal: 0.6, irid: 0.5, env: 1.2,
     key: '#ffe3a3', keyI: 1.4, spin: 0.35, page: '#000000', ui: '#d6b25e',
   }],
-  ['.deco-stage', 0.6, { m2: 1, rough: 0.03, metal: 1, irid: 1, env: 1.7, spark: 1, s: 1.2, spin: 0.5 }],
+  // огранку делает не прокрутка, а удары кувалды (play.cut), здесь только свет и масштаб
+  ['.deco-stage', 0.6, { spark: 1, s: 1.2, spin: 0.5 }],
   ['.deco-stage', 0.83, {}],
   ['#deco .era__inner', 0.5, { x: 0.42, my: 0.5, s: 1 }],
   ['#today', 0.06, {
@@ -140,10 +141,15 @@ const play = {
   press: 0,        // 0..1, насколько продавили камень в недрах
   holding: false,
   sparkBoost: 0,   // вспышка искр, когда водят светом
+  cut: 0,          // 0..1, огранка: растёт только от ударов кувалды
 };
 // как выглядит сырой алмаз, когда его продавили вручную
 const RAW = { m1: 1, coat: 0.4, rough: 0.3, metal: 0.8, irid: 0.3, env: 0.9, color: hexToRgb('#7d8a90') };
+// и как выглядит готовый бриллиант
+const BRIL = { rough: 0.03, metal: 1, irid: 1, env: 1.6, color: hexToRgb('#eef2f5') };
 const EMBER = hexToRgb('#ff5a14');
+const I_NOBLES = FRAMES.findIndex(([sel]) => sel === '#nobles');
+const I_MODERN = FRAMES.findIndex(([sel]) => sel === '#modern');
 
 const progress = document.querySelector('.progress');
 gsap.ticker.add((time) => {
@@ -168,8 +174,17 @@ gsap.ticker.add((time) => {
     st.emis = EMBER;
     st.emisI = Math.max(st.emisI, 0.15 + play.press * 0.5);
   }
+  // огранка видна с мастерской и дальше; выше по истории камень ещё не тронут
+  const workshop = Math.min(1, Math.max(0, (y - anchors[I_NOBLES]) / (anchors[I_MODERN] - anchors[I_NOBLES])));
+  const c = play.cut * workshop;
+  if (c > 0) {
+    for (const k of ['rough', 'metal', 'irid', 'env']) st[k] += (BRIL[k] - st[k]) * c;
+    st.color = st.color.map((v, j) => v + (BRIL.color[j] - v) * c);
+    st.m1 = 1;
+    st.m2 = c;
+  }
   play.sparkBoost *= 0.95;
-  st.spark = st.spark * (0.45 + play.sparkBoost);
+  st.spark = st.spark * c * (0.45 + play.sparkBoost);
 
   const mobile = mobileMQ.matches;
   scene.apply(mobile ? { ...st, x: 0, y: st.my } : st);
@@ -426,6 +441,9 @@ window.addEventListener('pointerup', (e) => {
       steps[done].classList.add('is-done');
       done++;
       vine.style.strokeDashoffset = String(1 - done / steps.length);
+      // каждый удар снимает с камня часть, после пятого он бриллиант
+      const cut = Math.max(play.cut, done / steps.length);
+      gsap.to(play, { cut, duration: 0.5, ease: 'power3.out' });
     }
     if (done === steps.length) {
       btn.textContent = 'Сайт готов. Ещё раз?';
@@ -457,6 +475,19 @@ window.addEventListener('pointerup', (e) => {
       .to(hammer, { rotate: -2, duration: 0.17, ease: 'power3.in', onComplete: impact })
       .to(hammer, { rotate: 28, duration: 0.35, ease: 'power2.out' })
       .to(hammer, { opacity: 0, duration: 0.25 }, '-=0.15');
+  });
+
+  // если мастерскую пролистали, огранить можно прямо в 1919 той же кувалдой
+  const decoBtn = document.querySelector('.deco-cut');
+  decoBtn.addEventListener('click', () => {
+    if (done === steps.length) return;
+    btn.click();
+  });
+  gsap.ticker.add(() => {
+    const left = steps.length - Math.round(play.cut * steps.length);
+    decoBtn.hidden = left <= 0;
+    const label = `Огранить: ещё ${left}`;
+    if (decoBtn.textContent !== label) decoBtn.textContent = label;
   });
 })();
 

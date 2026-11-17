@@ -837,6 +837,23 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; user-select:
 .steps li.is-done::before { background: #4f7c74; color: #f3ead6; }
 
 /* 1919 */
+.deco-cut {
+  position: absolute;
+  left: 50%; top: 74%;
+  transform: translateX(-50%);
+  z-index: 3;
+  font-family: "Poiret One", sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: .04em;
+  padding: .7rem 1.6rem;
+  border: 1px solid var(--gold);
+  background: rgba(0, 0, 0, .55);
+  color: var(--gold);
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.deco-cut:hover { background: var(--gold); color: #000; }
+.deco-cut[hidden] { display: none; }
 .light-hint {
   margin-top: 1.2rem;
   font-family: "Poiret One", sans-serif;
