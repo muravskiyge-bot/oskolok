@@ -1,0 +1,843 @@
+/* ---------- Основа ---------- */
+:root {
+  --page: #070914;   /* фон страницы, плавно меняется скриптом между эпохами */
+  --ui: #e6e4ef;     /* цвет навигации, тоже от эпохи */
+  --gutter: clamp(16px, 6vw, 96px);
+  --gold: #d6b25e;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+html { overflow-anchor: none; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+body {
+  background: var(--page);
+  color: #e6e4ef;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+h1, h2, h3, p, ul, ol { margin: 0; }
+svg { display: block; }
+
+.skip {
+  position: absolute; left: -999px; top: 8px; z-index: 30;
+  background: #fff; color: #000; padding: 8px 12px;
+}
+.skip:focus { left: 8px; }
+:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+
+#stage {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  display: block;
+}
+
+/* ---------- Каркас эпохи ---------- */
+.era {
+  position: relative;
+  min-height: 190vh;
+  padding: 30vh var(--gutter);
+  display: flex;
+  align-items: center;
+}
+.era--flip { padding-right: calc(var(--gutter) + 56px); }
+.era__inner {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 34rem);
+}
+.era--flip .era__inner { margin-left: auto; }
+
+/* декор живёт под 3D-сценой и мягко растворяется на краях эпохи */
+.decor {
+  position: absolute; inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent);
+          mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent);
+}
+.decor > svg { width: 100%; height: 100%; }
+
+.split .w { display: inline-block; white-space: nowrap; }
+.split .c { display: inline-block; }
+
+/* «Голос Георгия» одинаков во всех эпохах: современный шрифт и линия слева */
+.pitch {
+  font-family: "Manrope", sans-serif;
+  font-weight: 500;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  margin-top: 1.6rem;
+  padding-left: 1.1rem;
+  border-left: 2px solid currentColor;
+}
+.lore + .lore { margin-top: 1rem; }
+
+/* ---------- Навигация по эпохам ---------- */
+.era-nav {
+  position: fixed;
+  right: clamp(12px, 2vw, 28px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  color: var(--ui);
+}
+.era-nav ol {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: .85rem;
+}
+.era-nav a {
+  display: flex; align-items: center; justify-content: flex-end; gap: .7rem;
+  color: inherit; text-decoration: none;
+  font-size: .78rem; line-height: 1;
+  opacity: .5;
+  transition: opacity .3s;
+}
+.era-nav a:hover, .era-nav a[aria-current="true"] { opacity: 1; }
+.era-nav__mark {
+  width: 7px; height: 7px;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+  transition: background .3s;
+}
+.era-nav a[aria-current="true"] .era-nav__mark { background: currentColor; }
+.era-nav__label {
+  opacity: 0; transform: translateX(6px);
+  transition: opacity .3s, transform .3s;
+}
+.era-nav a:hover .era-nav__label,
+.era-nav a:focus-visible .era-nav__label,
+.era-nav a[aria-current="true"] .era-nav__label { opacity: 1; transform: none; }
+
+.progress {
+  display: none;
+  position: fixed; left: 0; top: 0; z-index: 10;
+  width: 100%; height: 2px;
+  background: var(--ui);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+
+/* ---------- Космос ---------- */
+.era--space {
+  color: #e6e4ef;
+  min-height: 200vh;
+  align-items: flex-start;
+  padding-top: 22vh;
+}
+.era--space .decor {
+  -webkit-mask-image: linear-gradient(#000 75%, transparent);
+          mask-image: linear-gradient(#000 75%, transparent);
+}
+.byline {
+  font-family: "Unbounded", sans-serif;
+  font-weight: 300;
+  font-size: .95rem;
+  opacity: .7;
+}
+.era--space h1 {
+  font-family: "Unbounded", sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6.2vw, 5.8rem);
+  line-height: 1.02;
+  letter-spacing: -.02em;
+  margin: 1.2rem 0 1.8rem;
+  width: min(100%, 13ch);
+}
+.era--space .era__inner { width: min(100%, 44rem); }
+.era--space .lore {
+  font-family: "Unbounded", sans-serif;
+  font-weight: 300;
+  font-size: 1rem;
+  line-height: 1.75;
+  max-width: 30rem;
+}
+.scroll-hint {
+  margin-top: 3.5rem;
+  display: flex; align-items: center; gap: .9rem;
+  font-family: "Unbounded", sans-serif;
+  font-size: .8rem;
+  opacity: .6;
+}
+.scroll-hint span {
+  width: 1px; height: 3rem;
+  background: currentColor;
+  transform-origin: top;
+  animation: drip 2.2s ease-in-out infinite;
+}
+@keyframes drip {
+  0% { transform: scaleY(0); opacity: 1; }
+  60% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
+.atmosphere {
+  position: absolute;
+  left: -30%; right: -30%;
+  bottom: -55vh;
+  height: 85vh;
+  border-radius: 50%;
+  border-top: 1px solid rgba(150, 190, 255, .55);
+  box-shadow: 0 -24px 90px rgba(110, 150, 255, .28);
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 120, 60, .32), rgba(120, 40, 30, .12) 40%, transparent 70%);
+}
+
+/* ---------- Недра ---------- */
+.era--nedra { color: #efe2cf; min-height: 220vh; }
+.era--nedra h2 {
+  font-family: "Jost", sans-serif;
+  font-weight: 600;
+  font-size: clamp(2.6rem, 7vw, 6.4rem);
+  line-height: .95;
+  letter-spacing: -.01em;
+  margin-bottom: 2rem;
+}
+.era--nedra h2 .c { transform-origin: 50% 100%; }
+.era--nedra .lore {
+  font-family: "Jost", sans-serif;
+  font-weight: 300;
+  font-size: 1.2rem;
+  line-height: 1.7;
+}
+
+/* ---------- 1762, барокко ---------- */
+.era--court { color: #f1dfae; }
+.velvet {
+  background:
+    radial-gradient(ellipse 55% 45% at 28% 50%, rgba(120, 20, 38, .9), transparent 70%),
+    radial-gradient(ellipse 40% 60% at 85% 40%, rgba(90, 12, 28, .7), transparent 70%);
+}
+.cartouche {
+  position: relative;
+  padding: clamp(2rem, 4.5vw, 3.4rem);
+  border: 1px solid rgba(214, 178, 94, .6);
+  outline: 1px solid rgba(214, 178, 94, .3);
+  outline-offset: 7px;
+}
+.corner {
+  position: absolute;
+  width: 56px; height: 56px;
+  color: var(--gold);
+}
+.corner--tl { top: -14px; left: -14px; }
+.corner--tr { top: -14px; right: -14px; transform: scaleX(-1); }
+.corner--bl { bottom: -14px; left: -14px; transform: scaleY(-1); }
+.corner--br { bottom: -14px; right: -14px; transform: scale(-1); }
+.era--court .era__year {
+  font-family: "Ruslan Display", serif;
+  font-size: clamp(2.6rem, 6vw, 4.6rem);
+  line-height: 1;
+  color: var(--gold);
+}
+.gild {
+  font-family: "Ruslan Display", serif;
+  font-weight: 400;
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+  line-height: 1.12;
+  margin: .7rem 0 1.4rem;
+  background: linear-gradient(100deg, #8a6a22 0%, #f6e3a1 22%, #b8902f 42%, #fff2c4 58%, #9c7426 78%, #e9cf86 100%);
+  background-size: 260% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+}
+.era--court .lore {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 1.32rem;
+  line-height: 1.55;
+}
+.era--court .pitch::first-letter {
+  font-family: "Ruslan Display", serif;
+  float: left;
+  font-size: 3.4em;
+  line-height: .82;
+  padding: .06em .12em 0 0;
+  color: var(--gold);
+}
+
+/* ---------- 1825, ампир ---------- */
+.era--nobles { color: #173d2f; }
+.era--nobles .era__inner { width: min(100%, 38rem); text-align: center; }
+.decor > .pilaster {
+  position: absolute;
+  top: 18%; height: 64%;
+  width: 46px;
+  color: #a8862f;
+  opacity: .7;
+}
+.pilaster--l { left: 2.5vw; }
+.pilaster--r { right: 2.5vw; }
+.wreath { width: 150px; margin: 0 auto 1.2rem; overflow: visible; }
+.wreath text { font-family: "Oranienbaum", serif; font-size: 34px; fill: #173d2f; }
+.wreath ellipse { fill: #a8862f; }
+.wreath path { fill: none; stroke: #a8862f; stroke-width: 1.2; }
+.spread {
+  display: flex; align-items: center; gap: 1rem;
+  font-family: "Oranienbaum", serif;
+  font-weight: 400;
+  font-size: clamp(1.9rem, 5vw, 4.2rem);
+  line-height: 1.05;
+  margin-bottom: 1.4rem;
+}
+.spread__text { flex: 0 1 auto; white-space: nowrap; }
+.spread .rule {
+  flex: 1 1 2rem;
+  height: 1px;
+  background: #a8862f;
+  transform-origin: center;
+}
+.era--nobles .lore {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 1.3rem;
+  line-height: 1.55;
+}
+.virtues {
+  list-style: none; padding: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.6rem;
+  margin-top: 2.8rem;
+}
+.virtues li { border-top: 1px solid #a8862f; padding-top: 1rem; }
+.virtues h3 {
+  font-family: "Oranienbaum", serif;
+  font-weight: 400;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  margin-bottom: .5rem;
+}
+.virtues p { font-size: .95rem; line-height: 1.55; }
+
+/* ---------- 1900, модерн ---------- */
+.era--modern { color: #3d2e22; min-height: 230vh; }
+.whiplash path {
+  fill: none;
+  stroke: #b39c6e;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.era--modern .era__year {
+  font-family: "Philosopher", sans-serif;
+  font-style: italic;
+  font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+  line-height: 1;
+  color: #4f7c74;
+}
+.era--modern h2 {
+  font-family: "Philosopher", sans-serif;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 5.5vw, 4.4rem);
+  line-height: 1.05;
+  margin: .4rem 0 1.4rem;
+}
+.era--modern .lore {
+  font-family: "Philosopher", sans-serif;
+  font-style: italic;
+  font-size: 1.22rem;
+  line-height: 1.6;
+}
+.steps-wrap { position: relative; margin-top: 2.4rem; }
+.vine {
+  position: absolute; left: 0; top: 0;
+  width: 2.1rem; height: 100%;
+}
+.vine path {
+  fill: none;
+  stroke: #c98b7a;
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.steps {
+  list-style: none;
+  padding: 0 0 0 3.3rem;
+  counter-reset: step;
+}
+.steps li { position: relative; padding-bottom: 1.9rem; }
+.steps li:last-child { padding-bottom: 0; }
+.steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute; left: -3.3rem; top: -.15rem;
+  width: 2.1rem; height: 2.1rem;
+  border-radius: 50%;
+  border: 1.5px solid #4f7c74;
+  background: #e7d8b6;
+  display: grid; place-items: center;
+  font-family: "Philosopher", sans-serif;
+  font-weight: 700;
+  color: #4f7c74;
+}
+.steps h3 {
+  font-family: "Philosopher", sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  margin-bottom: .2rem;
+}
+.steps p { font-size: .98rem; line-height: 1.55; }
+
+/* ---------- 1919, ар-деко ---------- */
+.era--deco {
+  color: #f3e9d2;
+  display: block;
+  min-height: 0;
+  padding: 0 var(--gutter) 34vh;
+}
+.deco-stage { height: 300vh; position: relative; }
+.deco-sticky {
+  position: sticky; top: 0;
+  height: 100vh; height: 100svh;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 11vh 0 9vh;
+  text-align: center;
+  overflow: hidden;
+}
+.sunburst {
+  position: absolute; inset: -20%;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(214, 178, 94, .22) 0deg .6deg, transparent .6deg 7.5deg);
+  -webkit-mask-image: radial-gradient(circle at center, transparent 0 12%, #000 22%, transparent 62%);
+          mask-image: radial-gradient(circle at center, transparent 0 12%, #000 22%, transparent 62%);
+}
+.deco-year {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-family: "Poiret One", sans-serif;
+  font-size: clamp(8rem, 30vw, 26rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(214, 178, 94, .35);
+}
+.deco-title {
+  position: relative;
+  height: 100%;
+  display: flex; flex-direction: column; justify-content: space-between;
+  font-family: "Poiret One", sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.1rem, 6.2vw, 5.8rem);
+  line-height: 1.05;
+  letter-spacing: .02em;
+  color: var(--gold);
+}
+.deco-line { display: block; }
+.era--deco .era__inner { margin-top: 10vh; }
+.era--deco .lore {
+  font-family: "Poiret One", sans-serif;
+  font-size: 1.32rem;
+  line-height: 1.6;
+  letter-spacing: .01em;
+}
+.era--deco .pitch { border-color: var(--gold); }
+
+/* ---------- Сегодня ---------- */
+.era--today {
+  color: #161616;
+  display: block;
+  min-height: 0;
+  padding: 34vh var(--gutter) 0;
+}
+.era--today h2 {
+  font-family: "Tenor Sans", sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  line-height: 1.1;
+  margin-bottom: 1.4rem;
+}
+.era--today .lore {
+  font-family: "Tenor Sans", sans-serif;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #4a4a4a;
+}
+.after__title {
+  font-family: "Tenor Sans", sans-serif;
+  font-weight: 400;
+  font-size: 1.4rem;
+  margin-top: 3rem;
+}
+.after { list-style: none; padding: 0; margin-top: 1rem; }
+.after li { border-top: 1px solid #e3e3e3; padding: .85rem 0; }
+.after li:last-child { border-bottom: 1px solid #e3e3e3; }
+
+.tryon {
+  position: relative; z-index: 2;
+  background: #fff;
+  margin: 30vh calc(var(--gutter) * -1) 0;
+  padding: 14vh calc(var(--gutter) + 56px) 14vh var(--gutter);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+}
+.tryon h3 {
+  font-family: "Tenor Sans", sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  line-height: 1.15;
+  margin-bottom: 1.6rem;
+}
+.tryon label { display: block; font-size: .9rem; color: #555; margin-bottom: .4rem; }
+.tryon input {
+  width: 100%;
+  font: inherit;
+  padding: .8rem 1rem;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  background: #fff;
+  color: #161616;
+}
+.tryon input:focus-visible { outline: 2px solid #161616; outline-offset: 2px; }
+.tryon__eras { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.2rem; }
+.tryon__eras button {
+  font: inherit; font-size: .92rem;
+  padding: .5rem .95rem;
+  border: 1px solid #cfcfcf;
+  border-radius: 999px;
+  background: #fff;
+  color: #161616;
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.tryon__eras button:hover { border-color: #161616; }
+.tryon__eras button[aria-checked="true"] { background: #161616; border-color: #161616; color: #fff; }
+
+/* визитка: одна разметка, семь костюмов */
+.card {
+  position: relative;
+  aspect-ratio: 1.75;
+  border-radius: 6px;
+  padding: clamp(1.2rem, 3vw, 2.2rem);
+  display: flex; flex-direction: column; justify-content: space-between;
+  overflow: hidden;
+  box-shadow: 0 40px 70px -40px rgba(0, 0, 0, .45);
+  transition: background-color .5s, color .5s;
+}
+.card__era { font-size: .85rem; opacity: .75; }
+.card__name {
+  font-size: clamp(1.6rem, 3.4vw, 2.8rem);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+.card__tag { font-size: .95rem; opacity: .8; }
+
+.card[data-style="space"] {
+  background: radial-gradient(circle at 80% 20%, #283070, #070914 60%);
+  color: #e6e4ef;
+  font-family: "Unbounded", sans-serif;
+}
+.card[data-style="space"] .card__name { font-weight: 800; letter-spacing: -.02em; }
+.card[data-style="space"]::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 60%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 45% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 88% 15%, #fff, transparent),
+    radial-gradient(1px 1px at 60% 25%, #fff, transparent);
+}
+.card[data-style="nedra"] {
+  background: linear-gradient(180deg, #6b4a33 0 28%, #4b3627 28% 52%, #30221a 52% 78%, #5e2410 78%);
+  color: #efe2cf;
+  font-family: "Jost", sans-serif;
+}
+.card[data-style="nedra"] .card__name { font-weight: 600; }
+.card[data-style="court"] {
+  background: radial-gradient(ellipse at 30% 40%, #6a1424, #2c060d 75%);
+  color: #e6c77a;
+  font-family: "Cormorant Garamond", serif;
+  outline: 1px solid rgba(214, 178, 94, .7);
+  outline-offset: -12px;
+}
+.card[data-style="court"] .card__name { font-family: "Ruslan Display", serif; }
+.card[data-style="court"] .card__tag { font-style: italic; font-size: 1.1rem; }
+.card[data-style="nobles"] {
+  background: #eeede8;
+  color: #173d2f;
+  font-family: "Cormorant Garamond", serif;
+  text-align: center;
+  border-top: 3px double #a8862f;
+  border-bottom: 3px double #a8862f;
+}
+.card[data-style="nobles"] .card__name { font-family: "Oranienbaum", serif; }
+.card[data-style="nobles"] .card__tag { font-style: italic; font-size: 1.1rem; }
+.card[data-style="modern"] {
+  background: #e7d8b6;
+  color: #3d2e22;
+  font-family: "Philosopher", sans-serif;
+  border-radius: 48px 6px 48px 6px;
+  border: 1.5px solid #4f7c74;
+}
+.card[data-style="modern"] .card__name { font-weight: 700; font-style: italic; }
+.card[data-style="deco"] {
+  background:
+    repeating-conic-gradient(from 0deg at 50% 120%, rgba(214, 178, 94, .25) 0deg .8deg, transparent .8deg 9deg),
+    #000;
+  color: var(--gold);
+  font-family: "Poiret One", sans-serif;
+  text-align: center;
+  outline: 1px solid rgba(214, 178, 94, .8);
+  outline-offset: -10px;
+}
+.card[data-style="deco"] .card__name { letter-spacing: .06em; }
+.card[data-style="today"] {
+  background: #fff;
+  color: #161616;
+  font-family: "Tenor Sans", sans-serif;
+  border: 1px solid #e3e3e3;
+}
+
+.contact {
+  position: relative; z-index: 2;
+  background: #fff;
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 16vh var(--gutter) 12vh;
+}
+.contact h2 { width: min(100%, 14ch); }
+.contact p { max-width: 34rem; color: #4a4a4a; }
+.cta {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 1.05rem 1.9rem;
+  border-radius: 999px;
+  background: #161616;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background .2s;
+}
+.cta:hover { background: #3a3a3a; }
+.handle { margin-top: .9rem; font-size: .95rem; }
+
+.footer {
+  position: relative; z-index: 2;
+  background: #fff;
+  color: #6b6b6b;
+  font-size: .85rem;
+  padding: 2rem var(--gutter);
+  border-top: 1px solid #ececec;
+}
+
+/* ---------- Интерактив ---------- */
+body.is-over-gem { cursor: grab; }
+body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; user-select: none; }
+
+.hammer {
+  position: fixed; left: 0; top: 0;
+  width: 160px; height: 160px;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: 94% 55%;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .35));
+}
+
+/* недра */
+.strata svg { transform: scaleY(calc(1 - var(--press, 0) * .14)); transform-origin: 50% 100%; transition: transform .1s linear; }
+.strata .magma { opacity: calc(.6 + var(--press, 0) * 1.4); }
+.press-ui { display: flex; align-items: center; gap: 1.1rem; margin-top: 1.8rem; }
+.press {
+  flex: none;
+  font-family: "Jost", sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 1rem 1.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: #efe2cf;
+  color: #2a1c14;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: transform .15s, background .2s;
+}
+.press.is-holding { transform: scale(.94); background: #ffb98a; }
+.press:disabled { background: transparent; color: #efe2cf; box-shadow: inset 0 0 0 1px #efe2cf; cursor: default; }
+.gauge {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(239, 226, 207, .18);
+  overflow: hidden;
+}
+.gauge span {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, #efe2cf, #ff7a2f);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--p, 0));
+}
+
+/* 1762 */
+.crown-field {
+  position: relative;
+  height: 210px;
+  margin-top: 1.4rem;
+  border: 1px solid rgba(214, 178, 94, .4);
+  background: radial-gradient(ellipse at 50% 30%, #4a0c18, #1c0307 80%);
+  overflow: hidden;
+  cursor: crosshair;
+  --mx: -200px; --my: -200px;
+}
+.crown-field::after {
+  content: "";
+  position: absolute; inset: 0; z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(circle 80px at var(--mx) var(--my), transparent 0, rgba(18, 2, 6, .9) 100%);
+  transition: background .3s;
+}
+.crown-field.is-found::after { background: rgba(18, 2, 6, .82); }
+.cg {
+  position: absolute;
+  width: var(--s); height: var(--s);
+  transform: translate(-50%, -50%);
+  clip-path: polygon(50% 0, 100% 38%, 50% 100%, 0 38%);
+  background: linear-gradient(135deg, #fffaf0, #e8d29a 40%, #b8902f 70%, #fff4d0);
+  cursor: pointer;
+  transition: opacity .3s, transform .5s;
+}
+.cg.is-miss { opacity: .25; }
+.cg.is-ours { animation: twinkle 2.6s ease-in-out infinite; animation-delay: var(--d); }
+.cg.is-found {
+  z-index: 2;
+  transform: translate(-50%, -50%) scale(4);
+  animation: none;
+  filter: brightness(1.3) drop-shadow(0 0 4px #fff2c4);
+}
+@keyframes twinkle {
+  0%, 70%, 100% { filter: brightness(1); }
+  80% { filter: brightness(2.4) drop-shadow(0 0 6px #fff); }
+}
+.crown-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .7rem; }
+.crown-status { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.1rem; }
+.crown-reveal {
+  font: inherit; font-size: .85rem;
+  background: none; border: 0; padding: .3rem 0;
+  color: #d6b25e; text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* 1825 */
+.fit { display: grid; justify-items: center; gap: 1rem; margin-top: 1.6rem; }
+.metals { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
+.metal {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.1rem;
+  padding: .4rem 1rem;
+  border: 1px solid #a8862f;
+  border-radius: 999px;
+  background: transparent;
+  color: #173d2f;
+  cursor: pointer;
+}
+.metal i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
+.metal[aria-checked="true"] { background: #173d2f; color: #eeede8; }
+.size { display: grid; gap: .3rem; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.05rem; }
+.size input { width: min(100%, 16rem); accent-color: #a8862f; }
+
+/* 1900 */
+.forge-ui { display: flex; align-items: center; gap: 1.1rem; margin: 1.8rem 0 2rem; }
+.forge {
+  font-family: "Philosopher", sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  padding: 1rem 1.9rem;
+  border: 0;
+  border-radius: 48px 8px 48px 8px;
+  background: #4f7c74;
+  color: #f3ead6;
+  cursor: pointer;
+  transition: transform .12s, background .2s;
+}
+.forge:hover { background: #3f6a62; }
+.forge:active { transform: scale(.95); }
+.forge-hint {
+  font-family: "Philosopher", sans-serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: #a5604e;
+  animation: nudge 1.4s ease-in-out infinite;
+}
+.forge-hint.is-quiet { animation: none; }
+@keyframes nudge { 50% { transform: translateX(-6px); } }
+.vine path { stroke-dashoffset: 1; transition: stroke-dashoffset .6s ease; }
+.steps li { opacity: .35; transition: opacity .4s; }
+.steps li.is-done { opacity: 1; }
+.steps li.is-done::before { background: #4f7c74; color: #f3ead6; }
+
+/* 1919 */
+.light-hint {
+  margin-top: 1.2rem;
+  font-family: "Poiret One", sans-serif;
+  font-size: 1.05rem;
+  color: var(--gold);
+}
+
+@media (hover: none) {
+  .light-hint { display: none; }
+}
+
+/* ---------- Средние экраны ---------- */
+@media (max-width: 1100px) {
+  .virtues { grid-template-columns: 1fr; text-align: left; }
+}
+
+/* ---------- Телефон ---------- */
+@media (max-width: 760px) {
+  :root { --gutter: 16px; }
+  .era-nav { display: none; }
+  .progress { display: block; }
+  .era, .era--flip {
+    min-height: 0;
+    padding: 56vh 16px 34vh;
+  }
+  .era__inner, .era--flip .era__inner {
+    width: 100%;
+    margin-left: 0;
+    padding: 1.4rem;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--page) 80%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+  }
+  .era--space { padding-top: 52vh; }
+  .decor > .pilaster { display: none; }
+  .press-ui { flex-wrap: wrap; }
+  .gauge { flex-basis: 100%; }
+  .crown-field { height: 180px; }
+  .spread__text { white-space: normal; }
+  .spread .rule { display: none; }
+  .cartouche { padding: 1.6rem 1.2rem; }
+  .corner { width: 40px; height: 40px; }
+  .virtues { text-align: left; }
+  .era--deco { padding: 0 16px 30vh; }
+  .deco-stage { height: 260vh; }
+  .era--deco .era__inner { margin-top: 0; }
+  .era--today { padding: 56vh 16px 0; }
+  .tryon {
+    grid-template-columns: 1fr;
+    margin: 24vh -16px 0;
+    padding: 10vh 16px;
+  }
+  .contact { margin: 0 -16px; padding: 10vh 16px; }
+  .era--today .era__inner { background: rgba(255, 255, 255, .85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-hint span { animation: none; }
+  .card { transition: none; }
+}

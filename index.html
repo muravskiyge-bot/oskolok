@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Георгий Муравский. Сайты на заказ</title>
+<meta name="description" content="История одного камня: от осколка из космоса до бриллианта. Сайты на заказ от Георгия Муравского.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M8 4h16l6 8-14 17L2 12z' fill='%23d6b25e'/%3E%3Cpath d='M2 12h28M8 4l4 8 4-8 4 8 4-8M12 12l4 17 4-17' fill='none' stroke='%23000' stroke-opacity='.35'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Jost:wght@300;600&family=Manrope:wght@400;500;700&family=Oranienbaum&family=Philosopher:ital,wght@0,400;0,700;1,400&family=Poiret+One&family=Ruslan+Display&family=Tenor+Sans&family=Unbounded:wght@300;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<a class="skip" href="#contact">Перейти к контактам</a>
+<canvas id="stage" aria-hidden="true"></canvas>
+<div class="progress" aria-hidden="true"></div>
+<svg class="hammer" viewBox="0 0 180 180" aria-hidden="true">
+  <rect x="44" y="92" width="130" height="14" rx="6" fill="#7a5233"/>
+  <rect x="44" y="92" width="130" height="5" rx="2.5" fill="#9a6b45"/>
+  <rect x="16" y="56" width="44" height="80" rx="5" fill="#3b3f45"/>
+  <rect x="16" y="56" width="44" height="14" rx="4" fill="#5d636b"/>
+  <rect x="12" y="124" width="52" height="12" rx="3" fill="#2a2d31"/>
+</svg>
+
+<nav class="era-nav" aria-label="Эпохи">
+  <ol>
+    <li><a href="#space"><span class="era-nav__label">Космос</span><span class="era-nav__mark"></span></a></li>
+    <li><a href="#nedra"><span class="era-nav__label">Недра</span><span class="era-nav__mark"></span></a></li>
+    <li><a href="#court"><span class="era-nav__label">1762</span><span class="era-nav__mark"></span></a></li>
+    <li><a href="#nobles"><span class="era-nav__label">1825</span><span class="era-nav__mark"></span></a></li>
+    <li><a href="#modern"><span class="era-nav__label">1900</span><span class="era-nav__mark"></span></a></li>
+    <li><a href="#deco"><span class="era-nav__label">1919</span><span class="era-nav__mark"></span></a></li>
+    <li><a href="#today"><span class="era-nav__label">Сегодня</span><span class="era-nav__mark"></span></a></li>
+  </ol>
+</nav>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="curl" viewBox="0 0 64 64">
+    <path d="M2 62 C2 26 26 2 62 2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M10 62 C10 32 32 10 62 10" fill="none" stroke="currentColor" stroke-width="1"/>
+    <path d="M20 46 c0-14 10-24 24-24 c8 0 12 6 12 12 c0 6-5 9-9 9 c-5 0-7-4-6-7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="20" cy="50" r="2.5" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<main>
+  <!-- Космос -->
+  <section id="space" class="era era--space">
+    <div class="decor"><div class="atmosphere"></div></div>
+    <div class="era__inner">
+      <p class="byline">Георгий Муравский, сайты на заказ</p>
+      <h1 class="split" data-fx="twinkle">Это история одного камня</h1>
+      <p class="lore">И того, при чём тут ваш сайт.</p>
+      <div class="scroll-hint" aria-hidden="true"><span></span>Нажмите на камень или листайте</div>
+    </div>
+  </section>
+
+  <!-- Недра -->
+  <section id="nedra" class="era era--nedra era--flip">
+    <div class="decor strata">
+      <svg viewBox="0 0 1440 1600" preserveAspectRatio="none">
+        <defs>
+          <radialGradient id="magma" cx="50%" cy="100%" r="70%">
+            <stop offset="0" stop-color="#c2481b" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#c2481b" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <path data-depth="1" fill="#5c4230" d="M0,260 C200,230 380,300 620,270 C860,240 1080,310 1440,260 L1440,1700 L0,1700Z"/>
+        <path data-depth="2" fill="#47321f" d="M0,560 C260,600 520,520 760,560 C1000,600 1220,530 1440,575 L1440,1700 L0,1700Z"/>
+        <path data-depth="3" fill="#352518" d="M0,860 C240,830 470,900 720,870 C980,840 1200,905 1440,860 L1440,1700 L0,1700Z"/>
+        <path data-depth="4" fill="#231810" d="M0,1150 C300,1190 560,1120 800,1160 C1050,1200 1250,1140 1440,1170 L1440,1700 L0,1700Z"/>
+        <rect class="magma" x="0" y="1000" width="1440" height="600" fill="url(#magma)"/>
+      </svg>
+    </div>
+    <div class="era__inner">
+      <h2 class="split" data-fx="press">Под давлением</h2>
+      <p class="lore">Чтобы обломок стал алмазом, нужны века жара и давления. Или одна кнопка.</p>
+      <div class="press-ui">
+        <button type="button" class="press">Зажмите, чтобы надавить</button>
+        <div class="gauge" aria-hidden="true"><span></span></div>
+      </div>
+      <p class="pitch">Ваша идея уже ценна. Ей не хватает формы.</p>
+    </div>
+  </section>
+
+  <!-- Царский двор -->
+  <section id="court" class="era era--court">
+    <div class="decor velvet"></div>
+    <div class="era__inner">
+      <div class="cartouche">
+        <svg class="corner corner--tl"><use href="#curl"/></svg>
+        <svg class="corner corner--tr"><use href="#curl"/></svg>
+        <svg class="corner corner--bl"><use href="#curl"/></svg>
+        <svg class="corner corner--br"><use href="#curl"/></svg>
+        <p class="era__year">1762</p>
+        <h2 class="gild">Камень для короны</h2>
+        <p class="lore">В Большой императорской короне почти пять тысяч алмазов. Найдите наш.</p>
+        <div class="crown-field" aria-hidden="true"></div>
+        <div class="crown-bar">
+          <p class="crown-status" aria-live="polite">Посветите курсором, наш камень мерцает</p>
+          <button type="button" class="crown-reveal">Показать</button>
+        </div>
+        <p class="pitch">Я Георгий Муравский. Делаю сайты с нуля, чтобы ваш бизнес не терялся среди одинаковых.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Дворяне -->
+  <section id="nobles" class="era era--nobles era--flip">
+    <div class="decor">
+      <svg class="pilaster pilaster--l" viewBox="0 0 60 600" preserveAspectRatio="none"><g fill="none" stroke="currentColor" vector-effect="non-scaling-stroke"><path vector-effect="non-scaling-stroke" d="M0 2H60M4 14H56M10 26H50M10 40H50M10 40V560M50 40V560M18 48V552M26 48V552M34 48V552M42 48V552M6 560H54M2 574H58M0 598H60"/></g></svg>
+      <svg class="pilaster pilaster--r" viewBox="0 0 60 600" preserveAspectRatio="none"><g fill="none" stroke="currentColor"><path vector-effect="non-scaling-stroke" d="M0 2H60M4 14H56M10 26H50M10 40H50M10 40V560M50 40V560M18 48V552M26 48V552M34 48V552M42 48V552M6 560H54M2 574H58M0 598H60"/></g></svg>
+    </div>
+    <div class="era__inner">
+      <svg class="wreath" viewBox="0 0 200 200" role="img" aria-label="1825"><text x="100" y="114" text-anchor="middle">1825</text></svg>
+      <h2 class="spread"><span class="rule"></span><span class="spread__text">Сделано на заказ</span><span class="rule"></span></h2>
+      <p class="lore">Граф заказал перстень по мерке. Подберите оправу сами.</p>
+      <div class="fit">
+        <div class="metals" role="radiogroup" aria-label="Металл оправы">
+          <button type="button" class="metal" role="radio" aria-checked="true" data-color="#d4a640" style="--c:#d4a640"><i></i>Золото</button>
+          <button type="button" class="metal" role="radio" aria-checked="false" data-color="#dfe3e6" style="--c:#dfe3e6"><i></i>Платина</button>
+          <button type="button" class="metal" role="radio" aria-checked="false" data-color="#e0a088" style="--c:#e0a088"><i></i>Розовое золото</button>
+        </div>
+        <label class="size">Размер по мерке <input type="range" min="0.8" max="1.25" step="0.01" value="1"></label>
+      </div>
+      <ul class="virtues">
+        <li><h3>Индивидуально</h3><p>Под ваше дело, а не из шаблона</p></li>
+        <li><h3>Честная цена</h3><p>Без студийных наценок</p></li>
+        <li><h3>Быстро</h3><p>Срок называю после ТЗ и держу его</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Модерн -->
+  <section id="modern" class="era era--modern">
+    <div class="decor whiplash">
+      <svg viewBox="0 0 1440 1800" preserveAspectRatio="none">
+        <path pathLength="1" d="M-50,200 C300,100 420,520 760,420 S1180,120 1500,380"/>
+        <path pathLength="1" d="M1500,820 C1200,700 1100,1120 820,980 S420,700 -50,920"/>
+        <path pathLength="1" d="M-50,1500 C260,1300 520,1700 820,1450 S1200,1100 1500,1350"/>
+      </svg>
+    </div>
+    <div class="era__inner">
+      <p class="era__year">1900</p>
+      <h2 class="split" data-fx="wave">В мастерской</h2>
+      <p class="lore">Пять ударов мастера, пять этапов работы.</p>
+      <div class="forge-ui">
+        <button type="button" class="forge">Сделать сайт</button>
+        <span class="forge-hint" aria-hidden="true">нажмите</span>
+      </div>
+      <div class="steps-wrap">
+      <svg class="vine" viewBox="0 0 40 1000" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M20,0 C40,80 0,160 20,250 S40,420 20,500 S0,660 20,750 S40,920 20,1000"/></svg>
+      <ol class="steps" aria-live="polite">
+        <li><h3>Разбираю ТЗ</h3><p>Цель, аудитория, задачи</p></li>
+        <li><h3>Считаю срок и цену</h3><p>После разбора, а не наугад</p></li>
+        <li><h3>Делаю дизайн и код</h3><p>С нуля, без шаблонов</p></li>
+        <li><h3>Вношу правки</h3><p>Объём оговариваем заранее</p></li>
+        <li><h3>Запускаю</h3><p>Проверяю на всех экранах</p></li>
+      </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ар-деко -->
+  <section id="deco" class="era era--deco">
+    <div class="deco-stage">
+      <div class="deco-sticky">
+        <div class="sunburst" aria-hidden="true"></div>
+        <p class="deco-year" aria-hidden="true">1919</p>
+        <h2 class="deco-title">
+          <span class="deco-line deco-line--a">Вы приносите алмаз.</span>
+          <span class="deco-line deco-line--b">Я делаю огранку.</span>
+        </h2>
+      </div>
+    </div>
+    <div class="era__inner">
+      <p class="lore">В 1919 году Марсель Толковский рассчитал огранку из 57 граней: свет входит в камень и выходит искрой.</p>
+      <p class="light-hint">Поводите курсором, чтобы направить свет</p>
+      <p class="pitch">Этот сайт и есть моя огранка. Всё сделано с нуля.</p>
+    </div>
+  </section>
+
+  <!-- Сегодня -->
+  <section id="today" class="era era--today">
+    <div class="era__inner">
+      <h2>На витрине</h2>
+      <p class="lore">Хороший бриллиант не нужно объяснять. Хороший сайт тоже.</p>
+      <h3 class="after__title">После запуска</h3>
+      <ul class="after">
+        <li>Помогу с доменом и публикацией</li>
+        <li>Месяц бесплатно исправляю ошибки</li>
+        <li>Инструкция, как менять тексты и фото</li>
+        <li>Доработки по договорённости</li>
+      </ul>
+    </div>
+
+    <div class="tryon">
+      <div class="tryon__controls">
+        <h3>Примерьте эпоху на свой бизнес</h3>
+        <label for="biz">Название вашего бизнеса</label>
+        <input id="biz" type="text" maxlength="28" placeholder="Ваша компания" autocomplete="off">
+        <div class="tryon__eras" role="radiogroup" aria-label="Стиль визитки">
+          <button type="button" role="radio" aria-checked="false" data-style="space">Космос</button>
+          <button type="button" role="radio" aria-checked="false" data-style="nedra">Недра</button>
+          <button type="button" role="radio" aria-checked="false" data-style="court">1762</button>
+          <button type="button" role="radio" aria-checked="false" data-style="nobles">1825</button>
+          <button type="button" role="radio" aria-checked="false" data-style="modern">1900</button>
+          <button type="button" role="radio" aria-checked="false" data-style="deco">1919</button>
+          <button type="button" role="radio" aria-checked="true" data-style="today">Сегодня</button>
+        </div>
+      </div>
+      <div class="card" data-style="today" aria-live="polite">
+        <p class="card__era">Сегодня</p>
+        <p class="card__name">Ваша компания</p>
+        <p class="card__tag">Здесь будет ваш слоган</p>
+      </div>
+    </div>
+
+    <div class="contact" id="contact">
+      <h2>Расскажите, какой у вас алмаз</h2>
+      <p>Цена под задачу. Начнём с разбора ТЗ.</p>
+      <a class="cta" href="https://t.me/kboomts" target="_blank" rel="noopener">Написать в Telegram</a>
+      <p class="handle">@kboomts</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">© 2026 Георгий Муравский. Сайт сделан с нуля, от первого камня до последней грани.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
