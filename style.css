@@ -672,6 +672,14 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; user-select:
   filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .35));
 }
 
+/* вспышка света от финального удара */
+.impact-flash {
+  position: fixed; inset: 0; z-index: 8;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at var(--fx, 60%) var(--fy, 45%), rgba(255, 252, 240, .95), rgba(255, 240, 200, .5) 35%, transparent 75%);
+}
+
 /* недра */
 .strata svg { transform: scaleY(calc(1 - var(--press, 0) * .14)); transform-origin: 50% 100%; transition: transform .1s linear; }
 .strata .magma { opacity: calc(.6 + var(--press, 0) * 1.4); }

@@ -52,6 +52,57 @@ export function strike(power = 1) {
   });
 }
 
+// Эхо зала: импульс из затухающего шума, чтобы финальный удар звучал протяжно
+let hall = null;
+function reverb(ac) {
+  if (hall) return hall;
+  const len = Math.floor(ac.sampleRate * 3.2);
+  const ir = ac.createBuffer(2, len, ac.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = ir.getChannelData(ch);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 2.5;
+  }
+  hall = ac.createConvolver();
+  hall.buffer = ir;
+  const wet = ac.createGain();
+  wet.gain.value = 0.55;
+  hall.connect(wet).connect(ac.destination);
+  return hall;
+}
+
+function bell(ac, out, { freq, gain, decay, when = 0 }) {
+  const t = ac.currentTime + when;
+  const o = ac.createOscillator();
+  const g = ac.createGain();
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+  o.connect(g);
+  g.connect(ac.destination);
+  g.connect(out);
+  o.start(t);
+  o.stop(t + decay + 0.05);
+}
+
+// Последний удар: грохот, треск и долгий звон огранённого камня
+export function finalStrike() {
+  const ac = audio();
+  if (!ac) return;
+  const hallIn = reverb(ac);
+  tone(ac, { freq: 95, to: 28, gain: 0.95, decay: 1.3 });
+  tone(ac, { freq: 60, to: 22, gain: 0.6, decay: 1.6, when: 0.02 });
+  noise(ac, { gain: 0.8, decay: 0.35, cutoff: 900 });
+  // колокол: негармоничные обертоны дают «звенящий» металл
+  [1, 2.76, 5.4, 8.93, 13.34].forEach((r, i) => {
+    bell(ac, hallIn, { freq: 520 * r, gain: 0.16 / (i + 1), decay: 3.6 - i * 0.5 });
+  });
+  // хрустальная россыпь следом
+  [2093, 2637, 3136, 3951, 4699].forEach((f, i) => {
+    bell(ac, hallIn, { freq: f, gain: 0.05, decay: 1.8, when: 0.35 + i * 0.09 });
+  });
+}
+
 // Короткий звон: камень готов
 export function chime() {
   const ac = audio();

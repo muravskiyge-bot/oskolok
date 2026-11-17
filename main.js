@@ -1,5 +1,5 @@
 import { createScene } from './scene.js';
-import { strike, chime, rumble } from './audio.js';
+import { strike, chime, rumble, finalStrike } from './audio.js';
 
 const gsap = window.gsap;
 const ScrollTrigger = window.ScrollTrigger;
@@ -423,6 +423,39 @@ window.addEventListener('pointerup', (e) => {
   size.addEventListener('input', () => scene && scene.setRing(null, Number(size.value)));
 })();
 
+/* ---------- Сотрясение страницы от финального удара ---------- */
+const flashEl = document.createElement('div');
+flashEl.className = 'impact-flash';
+flashEl.setAttribute('aria-hidden', 'true');
+document.body.appendChild(flashEl);
+function quake() {
+  const mainEl = document.querySelector('main');
+  const targets = [mainEl, canvas];
+  const tl = gsap.timeline({
+    // transform на main создаёт отдельный слой, поэтому после тряски убираем его полностью
+    onComplete: () => gsap.set(targets, { clearProps: 'transform' }),
+  });
+  const hits = reduce ? 3 : 12;
+  for (let i = 0; i < hits; i++) {
+    const k = 1 - i / hits;
+    tl.to(targets, {
+      x: (Math.random() * 2 - 1) * 22 * k,
+      y: (Math.random() * 2 - 1) * 14 * k,
+      rotation: (Math.random() * 2 - 1) * 0.8 * k,
+      duration: 0.055,
+      ease: 'none',
+    });
+  }
+  tl.to(targets, { x: 0, y: 0, rotation: 0, duration: 0.2, ease: 'power2.out' });
+  if (scene) {
+    // вспышка из той точки, где камень
+    const s = scene.screen();
+    flashEl.style.setProperty('--fx', `${s.x}px`);
+    flashEl.style.setProperty('--fy', `${s.y}px`);
+  }
+  gsap.fromTo(flashEl, { opacity: 0.85 }, { opacity: 0, duration: 0.9, ease: 'power2.out' });
+}
+
 /* ---------- 1900: кувалда мастера ---------- */
 (function forge() {
   const btn = document.querySelector('.forge');
@@ -434,9 +467,17 @@ window.addEventListener('pointerup', (e) => {
   let swing = null;
 
   const impact = () => {
-    if (scene) scene.hit(1);
-    strike(1);
-    gsap.fromTo(canvas, { x: -6, y: 3 }, { x: 0, y: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' });
+    // последний удар, который превращает камень в бриллиант, особенный
+    const final = done === steps.length - 1 && play.cut < 1;
+    if (final) {
+      if (scene) scene.hit(2);
+      finalStrike();
+      quake();
+    } else {
+      if (scene) scene.hit(1);
+      strike(1);
+      gsap.fromTo(canvas, { x: -6, y: 3 }, { x: 0, y: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' });
+    }
     if (done < steps.length) {
       steps[done].classList.add('is-done');
       done++;
@@ -447,8 +488,8 @@ window.addEventListener('pointerup', (e) => {
     }
     if (done === steps.length) {
       btn.textContent = 'Сайт готов. Ещё раз?';
-      hint.textContent = 'дальше огранка, листайте';
-      chime();
+      hint.textContent = 'камень огранён, листайте';
+      if (!final) chime();
     } else {
       btn.textContent = `Удар ${done + 1} из ${steps.length}`;
     }
