@@ -251,8 +251,16 @@ document.querySelectorAll('.era').forEach((sec) => {
 })();
 
 /* ---------- Камень в руках: крутить мышкой, стучать кликом ---------- */
-const INTERACTIVE = 'a, button, input, label, .crown-field';
+const INTERACTIVE = 'a, button, input, label';
 let grab = null;
+let mouse = null; // последняя позиция мыши: подсветку камня проверяем каждый кадр, он двигается при прокрутке
+document.addEventListener('mouseleave', () => { mouse = null; });
+gsap.ticker.add(() => {
+  if (!scene) return;
+  const over = !!grab || (!!mouse && mouse.free && scene.hits(mouse.x, mouse.y));
+  scene.setHover(over);
+  document.body.classList.toggle('is-over-gem', over);
+});
 window.addEventListener('pointerdown', (e) => {
   if (!scene || e.button > 0 || e.target.closest(INTERACTIVE)) return;
   if (!scene.hits(e.clientX, e.clientY)) return;
@@ -269,9 +277,7 @@ window.addEventListener('pointermove', (e) => {
     const ny = (e.clientY / window.innerHeight) * 2 - 1;
     scene.lightAt(nx, ny);
     play.sparkBoost = Math.min(1.6, play.sparkBoost + Math.hypot(e.movementX || 0, e.movementY || 0) * 0.004);
-    if (!grab && e.pointerType === 'mouse') {
-      document.body.classList.toggle('is-over-gem', !e.target.closest(INTERACTIVE) && scene.hits(e.clientX, e.clientY));
-    }
+    mouse = e.pointerType === 'mouse' ? { x: e.clientX, y: e.clientY, free: !e.target.closest(INTERACTIVE) } : null;
   }
   if (grab && grab.mouse) {
     scene.drag(e.clientX - grab.x, e.clientY - grab.y);
@@ -336,50 +342,61 @@ window.addEventListener('pointerup', (e) => {
   });
 })();
 
-/* ---------- 1762: найти свой камень в короне ---------- */
+/* ---------- 1762: лупа находит наш камень в короне ---------- */
 (function crown() {
   const field = document.querySelector('.crown-field');
+  const lens = field.querySelector('.lens');
   const status = document.querySelector('.crown-status');
-  const reveal = document.querySelector('.crown-reveal');
+  const btn = document.querySelector('.crown-find');
   const COUNT = mobileMQ.matches ? 45 : 80;
+  // наш камень держим подальше от краёв, чтобы лупа на нём не обрезалась
   const oursIndex = Math.floor(Math.random() * COUNT);
   let ours = null;
-  let found = false;
   for (let i = 0; i < COUNT; i++) {
     const g = document.createElement('span');
     g.className = 'cg';
-    g.style.left = `${4 + Math.random() * 92}%`;
-    g.style.top = `${8 + Math.random() * 84}%`;
+    const edge = i === oursIndex ? 18 : 4;
+    g.style.left = `${edge + Math.random() * (100 - edge * 2)}%`;
+    g.style.top = `${edge + 4 + Math.random() * (92 - edge * 2)}%`;
     g.style.setProperty('--s', `${10 + Math.random() * 10}px`);
-    g.style.setProperty('--d', `${Math.random() * -3}s`);
     if (i === oursIndex) { g.classList.add('is-ours'); ours = g; }
-    field.appendChild(g);
+    field.insertBefore(g, lens);
   }
-  const win = () => {
-    if (found) return;
-    found = true;
-    field.classList.add('is-found');
-    ours.classList.add('is-found');
-    status.textContent = 'Нашли. Так же выделю и ваш бизнес';
-    reveal.hidden = true;
-    if (scene) scene.hit(0.4);
-    chime();
+
+  const at = (x, y) => {
+    gsap.set(lens, { x, y });
+    field.style.setProperty('--mx', `${x}px`);
+    field.style.setProperty('--my', `${y}px`);
   };
-  field.addEventListener('pointermove', (e) => {
-    const r = field.getBoundingClientRect();
-    field.style.setProperty('--mx', `${e.clientX - r.left}px`);
-    field.style.setProperty('--my', `${e.clientY - r.top}px`);
+
+  btn.addEventListener('click', () => {
+    btn.disabled = true;
+    status.textContent = 'Ищу…';
+    const w = field.clientWidth, h = field.clientHeight;
+    const target = { x: ours.offsetLeft, y: ours.offsetTop };
+    const pos = { x: w * 0.15, y: h * 0.5 };
+    // лупа осматривает корону по нескольким точкам и останавливается на нашем
+    const stops = [
+      { x: w * 0.4, y: h * 0.25 },
+      { x: w * 0.75, y: h * 0.7 },
+      { x: w * 0.55, y: h * 0.45 },
+      target,
+    ];
+    field.classList.add('is-searching');
+    at(pos.x, pos.y);
+    const tl = gsap.timeline({ onUpdate: () => at(pos.x, pos.y) });
+    tl.to(lens, { opacity: 1, scale: 1, duration: 0.25 }, 0);
+    stops.forEach((p, i) => tl.to(pos, { x: p.x, y: p.y, duration: i === stops.length - 1 ? 0.8 : 0.6, ease: 'power2.inOut' }));
+    tl.to(lens, { scale: 1.25, duration: 0.25, ease: 'back.out(3)' })
+      .call(() => {
+        field.classList.add('is-found');
+        ours.classList.add('is-found');
+        status.textContent = 'Вот он. Так же выделю и ваш бизнес';
+        btn.textContent = 'Найден';
+        chime();
+      })
+      .to(lens, { opacity: 0, duration: 0.4 }, '+=0.4');
   });
-  field.addEventListener('click', (e) => {
-    const g = e.target.closest('.cg');
-    if (!g || found) return;
-    if (g === ours) win();
-    else {
-      g.classList.add('is-miss');
-      status.textContent = 'Не этот. Ищите тот, что мерцает';
-    }
-  });
-  reveal.addEventListener('click', win);
 })();
 
 /* ---------- 1825: оправа по мерке ---------- */

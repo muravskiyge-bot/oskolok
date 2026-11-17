@@ -103,7 +103,7 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
   const key = new THREE.DirectionalLight(0xffffff, 1.2);
   key.position.set(3, 4, 5);
   const rim = new THREE.DirectionalLight(0x8fb0ff, 0.9);
-  rim.position.set(-4, 1, -3);
+  rim.position.set(-4, 2, -2);
   scene.add(ambient, key, rim);
 
   // --- Три формы Осколка как радиусы по одним и тем же направлениям ---
@@ -236,6 +236,7 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
   }
 
   let flash = 0, joltA = 0, joltV = 0, shake = 0;
+  let hover = false, hoverT = 0; // подсветка камня под курсором
   let dragging = false;
   const rotVel = new THREE.Vector2();
   const lightTarget = new THREE.Vector3(3, 4, 5);
@@ -269,7 +270,7 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
     const halfW = halfH * camera.aspect;
     const fit = mobile ? 0.6 : 0.82 * THREE.MathUtils.clamp(camera.aspect / 1.7, 0.72, 1);
     hero.position.set(st.x * halfW, st.y * halfH, 0);
-    hero.scale.setScalar(st.s * fit);
+    hero.scale.setScalar(st.s * fit * (1 + hoverT * 0.06));
 
     setMorph(st.m1, st.m2);
     gemMat.color.setRGB(st.color[0], st.color[1], st.color[2], THREE.SRGBColorSpace);
@@ -280,13 +281,15 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
     gemMat.clearcoat = st.coat;
     gemMat.emissive.setRGB(st.emis[0], st.emis[1], st.emis[2], THREE.SRGBColorSpace);
     gemMat.emissiveIntensity = st.emisI;
-    if (flash > 0.01) {
-      gemMat.emissive.setRGB(1, 0.97, 0.9);
-      gemMat.emissiveIntensity = Math.max(st.emisI, flash);
+    const glow = Math.max(flash, hoverT * 0.07);
+    if (glow > 0.01 && glow > st.emisI) {
+      gemMat.emissive.setRGB(1, 0.94, 0.82);
+      gemMat.emissiveIntensity = glow;
     }
 
     key.color.setRGB(st.key[0], st.key[1], st.key[2], THREE.SRGBColorSpace);
-    key.intensity = st.keyI;
+    key.intensity = st.keyI + hoverT * 0.4;
+    rim.intensity = 0.9 + hoverT * 4; // наведение обводит камень светом по контуру
 
     starMat.opacity = st.stars;
     stars.visible = st.stars > 0.01;
@@ -324,6 +327,7 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
     joltA += joltV * dt;
     userRot.rotation.z = joltA;
     flash = Math.max(0, flash - dt * 3.5);
+    hoverT += ((hover ? 1 : 0) - hoverT) * Math.min(1, dt * 10);
 
     key.position.lerp(lightTarget, 0.08);
     camera.position.x = (Math.random() - 0.5) * shake * 0.06;
@@ -377,8 +381,10 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
       rotVel.set(dx * 0.01, dy * 0.01);
     },
     setDragging(v) { dragging = v; },
+    setHover(v) { hover = v; },
     setShake(v) { shake = v; },
-    lightAt(nx, ny) { lightTarget.set(nx * 7, -ny * 6 + 1, 5); },
+    // свет смещается за курсором, но всегда остаётся сбоку, чтобы не съедать рельеф
+    lightAt(nx, ny) { lightTarget.set(3 + nx * 3.5, 4 - ny * 3, 4); },
     setRing(color, size) {
       if (color) ringMat.color.set(color);
       if (size) ring.scale.setScalar(size);
