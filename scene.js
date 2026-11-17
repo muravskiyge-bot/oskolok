@@ -182,18 +182,35 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
   });
   const sparks = new THREE.Points(sparkGeo, sparkMat);
 
-  const gem = new THREE.Group();
-  gem.add(morphMesh, octMesh, brilMesh, sparks);
-
-  // золотая оправа перстня (эпоха дворян)
+  // золотая оправа перстня (эпоха дворян). Это «резинка»: при сужении она
+  // не проходит сквозь камень, а обтягивает его грани. Вращается вместе с камнем.
+  const RING_Y = -0.42, RING_R = 0.78, RING_TUBE = 0.07;
+  const SECTION = 1.18 - Math.abs(RING_Y); // сечение октаэдра на высоте кольца — квадрат
+  class BandCurve extends THREE.Curve {
+    constructor(r) { super(); this.r = r; }
+    getPoint(t, out = new THREE.Vector3()) {
+      const a = t * Math.PI * 2;
+      const c = Math.cos(a), s = Math.sin(a);
+      const face = SECTION / (Math.abs(c) + Math.abs(s)) + RING_TUBE * 0.9;
+      // мягкий максимум: на углах резинка плавно переходит в прижатую к грани
+      const k = 0.06;
+      const R = (this.r + face + Math.sqrt((this.r - face) ** 2 + k * k)) / 2;
+      return out.set(c * R, RING_Y, s * R);
+    }
+  }
   const ringMat = new THREE.MeshStandardMaterial({ color: 0xd4a640, metalness: 1, roughness: 0.28, transparent: true, opacity: 0 });
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.07, 24, 96), ringMat);
-  ring.rotation.x = Math.PI / 2;
-  ring.position.y = -0.42;
+  const ring = new THREE.Mesh(new THREE.TubeGeometry(new BandCurve(RING_R), 192, RING_TUBE, 14, true), ringMat);
+  function setBand(size) {
+    ring.geometry.dispose();
+    ring.geometry = new THREE.TubeGeometry(new BandCurve(RING_R * size), 192, RING_TUBE, 14, true);
+  }
+
+  const gem = new THREE.Group();
+  gem.add(morphMesh, octMesh, brilMesh, sparks, ring);
 
   const tilt = new THREE.Group();
   tilt.rotation.x = 0.42;
-  tilt.add(gem, ring);
+  tilt.add(gem);
   const userRot = new THREE.Group(); // вращение мышкой и отдача от ударов
   userRot.add(tilt);
   const hero = new THREE.Group();
@@ -212,6 +229,68 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
   const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, sizeAttenuation: true, transparent: true, opacity: 1, depthWrite: false });
   const stars = new THREE.Points(starGeo, starMat);
   scene.add(stars);
+
+  // дождь из камней внизу сайта: несколько огранок, разные оттенки и размеры
+  const emeraldGeo = new ConvexGeometry([
+    ...[[0.5, 0.3], [0.3, 0.5]].flatMap(([a, b]) => [[a, b], [-a, b], [a, -b], [-a, -b]]).map(([x, z]) => new THREE.Vector3(x * 0.8, 0.28, z * 0.55)),
+    ...[[1, 0.55], [0.75, 0.8]].flatMap(([a, b]) => [[a, b], [-a, b], [a, -b], [-a, -b]]).map(([x, z]) => new THREE.Vector3(x, 0, z * 0.85)),
+    new THREE.Vector3(0.45, -0.5, 0), new THREE.Vector3(-0.45, -0.5, 0),
+  ]);
+  const princessGeo = new ConvexGeometry([
+    ...[[1, 1], [-1, 1], [1, -1], [-1, -1]].map(([x, z]) => new THREE.Vector3(x * 0.72, 0, z * 0.72)),
+    ...[[1, 1], [-1, 1], [1, -1], [-1, -1]].map(([x, z]) => new THREE.Vector3(x * 0.45, 0.26, z * 0.45)),
+    new THREE.Vector3(0, -0.75, 0),
+  ]);
+  const RAIN_SHAPES = [brilGeo, new THREE.OctahedronGeometry(0.9), emeraldGeo, princessGeo];
+  const RAIN_TINTS = ['#ffffff', '#dff0ff', '#ffe1ec', '#fff1c9', '#e2fff2', '#e9e1ff', '#cfe7ff'];
+  const RAIN_PER_SHAPE = window.matchMedia('(max-width: 760px)').matches ? 7 : 14;
+  const rainMat = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff, metalness: 1, roughness: 0.06, flatShading: true,
+    iridescence: 1, iridescenceIOR: 1.8, envMapIntensity: 1.5,
+  });
+  const dummy = new THREE.Object3D();
+  const tint = new THREE.Color();
+  const rain = RAIN_SHAPES.map((geo) => {
+    const mesh = new THREE.InstancedMesh(geo, rainMat, RAIN_PER_SHAPE);
+    mesh.frustumCulled = false;
+    mesh.visible = false;
+    const items = Array.from({ length: RAIN_PER_SHAPE }, (_, i) => {
+      tint.set(RAIN_TINTS[Math.floor(rand() * RAIN_TINTS.length)]);
+      mesh.setColorAt(i, tint);
+      return {
+        z: -1 - rand() * 6,
+        x: rand() * 2 - 1,       // доля ширины экрана на своей глубине
+        y: rand() * 2 - 1,       // доля высоты
+        vy: 0.14 + rand() * 0.24,
+        s: 0.12 + rand() * 0.28,
+        rot: new THREE.Euler(rand() * 6, rand() * 6, rand() * 6),
+        spin: new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).multiplyScalar(2.4),
+      };
+    });
+    scene.add(mesh);
+    return { mesh, items };
+  });
+  let rainLevel = 0;
+  function updateRain(dt) {
+    const show = rainLevel > 0.01;
+    const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    for (const { mesh, items } of rain) {
+      mesh.visible = show;
+      if (!show) continue;
+      items.forEach((it, i) => {
+        it.y -= it.vy * dt;
+        if (it.y < -1.25) { it.y = 1.25; it.x = rand() * 2 - 1; }
+        it.rot.x += it.spin.x * dt; it.rot.y += it.spin.y * dt; it.rot.z += it.spin.z * dt;
+        const halfH = tanH * (camera.position.z - it.z);
+        dummy.position.set(it.x * halfH * camera.aspect, it.y * halfH, it.z);
+        dummy.rotation.copy(it.rot);
+        dummy.scale.setScalar(it.s * rainLevel);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+  }
 
   // осколки, которые отлетают от ударов
   const shardGeo = new THREE.TetrahedronGeometry(1);
@@ -296,6 +375,7 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
     ringMat.opacity = st.ring;
     ring.visible = st.ring > 0.01;
     sparkMat.uniforms.uOpacity.value = st.spark;
+    rainLevel = st.rain;
     sparks.visible = st.spark > 0.01;
     spin = st.spin;
   }
@@ -348,6 +428,7 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
       }
     }
 
+    updateRain(reducedMotion ? 0 : dt);
     sparkMat.uniforms.uTime.value = time;
     renderer.render(scene, camera);
   }
@@ -387,7 +468,7 @@ export function createScene(canvas, { reducedMotion = false } = {}) {
     lightAt(nx, ny) { lightTarget.set(3 + nx * 3.5, 4 - ny * 3, 4); },
     setRing(color, size) {
       if (color) ringMat.color.set(color);
-      if (size) ring.scale.setScalar(size);
+      if (size) setBand(size);
     },
   };
 }

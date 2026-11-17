@@ -600,11 +600,11 @@ svg { display: block; }
   border: 1px solid #e3e3e3;
 }
 
+/* фон прозрачный: за текстом сыплются бриллианты из 3D-сцены */
 .contact {
   position: relative; z-index: 2;
-  background: #fff;
   margin: 0 calc(var(--gutter) * -1);
-  padding: 16vh var(--gutter) 12vh;
+  padding: 24vh var(--gutter) 24vh;
 }
 .contact h2 { width: min(100%, 14ch); }
 .contact p { max-width: 34rem; color: #4a4a4a; }
@@ -624,7 +624,6 @@ svg { display: block; }
 
 .footer {
   position: relative; z-index: 2;
-  background: #fff;
   color: #6b6b6b;
   font-size: .85rem;
   padding: 2rem var(--gutter);
@@ -665,7 +664,10 @@ body.is-grabbing, body.is-grabbing * { cursor: grabbing !important; user-select:
   touch-action: none;
   transition: transform .15s, background .2s;
 }
-.press.is-holding { transform: scale(.94); background: #ffb98a; }
+.press.is-pressed { animation: squash .35s ease-out; }
+@keyframes squash {
+  30% { transform: scale(.9, .82); background: #ffb98a; }
+}
 .press:disabled { background: transparent; color: #efe2cf; box-shadow: inset 0 0 0 1px #efe2cf; cursor: default; }
 .gauge {
   flex: 1;

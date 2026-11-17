@@ -30,7 +30,7 @@ const FRAMES = [
     x: 0.42, y: 0, my: 0.5, s: 0.85, m1: 0, m2: 0,
     color: '#3b3733', rough: 1, metal: 0, irid: 0, env: 0.12, coat: 0,
     emis: '#ff3a0a', emisI: 0, key: '#a9bcff', keyI: 1.3,
-    stars: 1, ring: 0, spark: 0, spin: 0.2,
+    stars: 1, ring: 0, spark: 0, spin: 0.2, rain: 0,
     page: '#070914', ui: '#e6e4ef',
   }],
   ['#space', 0.85, { x: 0.12, y: -0.3, emisI: 0.55, stars: 0.4, page: '#160b10' }],
@@ -67,6 +67,9 @@ const FRAMES = [
   }],
   ['#today', 0.3, {}],
   ['#today', 0.55, { x: 0.55, y: 0.55, my: 0.62, s: 0.5 }],
+  // в самом низу камень уходит, а сверху сыплются бриллианты
+  ['.tryon', 0.85, {}],
+  ['.contact', 0.15, { y: 1.8, my: 1.8, rain: 1 }],
 ];
 
 const COLOR_KEYS = ['color', 'emis', 'key', 'page', 'ui'];
@@ -297,46 +300,41 @@ window.addEventListener('pointerup', (e) => {
   grab = null;
 });
 
-/* ---------- Недра: зажать и надавить ---------- */
+/* ---------- Недра: пять нажатий до алмаза ---------- */
 (function pressure() {
   const btn = document.querySelector('.press');
   const section = document.getElementById('nedra');
   const gauge = document.querySelector('.gauge');
-  const DURATION = 2.4; // секунд до алмаза
-  const start = (e) => {
-    if (play.press >= 1) return;
-    if (e) e.preventDefault();
+  const PRESSES = 5;
+  let count = 0;
+  const shake = { v: 0 };
+
+  btn.addEventListener('click', () => {
+    if (count >= PRESSES) return;
+    count++;
+    const last = count === PRESSES;
+    // каждое нажатие: толчок, гул, жар и шаг к алмазу
+    gsap.to(play, { press: count / PRESSES, duration: 0.45, ease: 'power2.out' });
     play.holding = true;
-    btn.classList.add('is-holding');
-  };
-  const stop = () => {
-    if (!play.holding) return;
-    play.holding = false;
-    btn.classList.remove('is-holding');
-    rumble(0);
-    if (scene) scene.setShake(0);
-  };
-  btn.addEventListener('pointerdown', start);
-  btn.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) start(e); });
-  btn.addEventListener('keyup', stop);
-  window.addEventListener('pointerup', stop);
-  btn.addEventListener('pointercancel', stop);
-  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    gsap.delayedCall(0.5, () => { play.holding = false; });
+    gsap.fromTo(shake, { v: 0.4 + count * 0.12 }, { v: 0, duration: 0.5, ease: 'power2.out', onUpdate: () => scene && scene.setShake(shake.v) });
+    rumble(0.4 + count * 0.12);
+    gsap.delayedCall(0.35, () => rumble(0));
+    strike(0.35 + count * 0.08);
+    if (scene) scene.hit(last ? 0.9 : 0.25);
+    btn.classList.remove('is-pressed');
+    void btn.offsetWidth;
+    btn.classList.add('is-pressed');
+    if (last) {
+      chime();
+      btn.textContent = 'Алмаз готов';
+      btn.disabled = true;
+    } else {
+      btn.textContent = `Ещё ${PRESSES - count}`;
+    }
+  });
 
   gsap.ticker.add(() => {
-    if (play.holding) {
-      play.press = Math.min(1, play.press + gsap.ticker.deltaRatio() / 60 / DURATION);
-      rumble(0.3 + play.press * 0.7);
-      if (scene) scene.setShake(play.press);
-      if (play.press >= 1) {
-        stop();
-        if (scene) scene.hit(0.8);
-        strike(0.6);
-        chime();
-        btn.textContent = 'Алмаз готов';
-        btn.disabled = true;
-      }
-    }
     section.style.setProperty('--press', play.press.toFixed(3));
     gauge.style.setProperty('--p', play.press.toFixed(3));
   });
