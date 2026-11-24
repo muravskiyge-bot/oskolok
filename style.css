@@ -9,6 +9,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; }
 html { overflow-anchor: none; }
+/* без этого overflow у body уходит на окно, и страница остаётся шире экрана */
+@supports (overflow-x: clip) { html { overflow-x: clip; } }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 
